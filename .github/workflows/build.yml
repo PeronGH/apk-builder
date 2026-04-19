@@ -94,6 +94,9 @@ jobs:
           mapfile -t apks <"${{ steps.build.outputs.apks_file }}"
           hash=$(git -C "apps/${{ matrix.app }}/source" rev-parse --short HEAD)
           tag="${{ matrix.app }}-$hash"
+          gh release delete "$tag" \
+              --repo "${{ github.repository }}" \
+              --yes --cleanup-tag 2>/dev/null || true
           gh release create "$tag" \
               --repo "${{ github.repository }}" \
               --title "$tag" \
