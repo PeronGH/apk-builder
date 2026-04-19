@@ -1,5 +1,5 @@
 [submodule "os-updater"]
-	path = apps/os-updater
+	path = apps/os-updater/source
 	url = https://github.com/oxygen-updater/os-updater
 	branch = master
 	shallow = true

@@ -6,6 +6,10 @@ on:
     paths:
       - 'apps/**'
   workflow_dispatch:
+    inputs:
+      app:
+        description: Build only this app (empty = all)
+        required: false
 
 permissions:
   contents: write
@@ -21,19 +25,28 @@ jobs:
           fetch-depth: 2
 
       - id: detect
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          EVENT: ${{ github.event_name }}
+          APP_INPUT: ${{ github.event.inputs.app }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-              mapfile -t names < <(find apps -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -u)
-          else
-              before='${{ github.event.before }}'
-              if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
-                  before="HEAD~1"
+          declare -a changed=()
+          for dir in apps/*/; do
+              name="$(basename "$dir")"
+              if [ "$EVENT" = "workflow_dispatch" ]; then
+                  if [ -n "${APP_INPUT:-}" ] && [ "$APP_INPUT" != "$name" ]; then
+                      continue
+                  fi
+                  changed+=("$name")
+                  continue
               fi
-              mapfile -t names < <(git diff --name-only "$before" HEAD -- apps/ | awk -F/ 'NF>=2 {print $2}' | sort -u)
-          fi
-          printf '%s\n' "${names[@]}"
-          json=$(printf '%s\n' "${names[@]}" | jq -R . | jq -sc '[.[] | select(length > 0)]')
+              if [ -x "$dir/changed.sh" ] && BEFORE_SHA="$BEFORE_SHA" "$dir/changed.sh"; then
+                  changed+=("$name")
+              fi
+          done
+          printf 'changed: %s\n' "${changed[@]:-<none>}"
+          json=$(printf '%s\n' "${changed[@]:-}" | jq -R . | jq -sc '[.[] | select(length > 0)]')
           echo "apps=$json" >>"$GITHUB_OUTPUT"
 
   build:
@@ -57,25 +70,32 @@ jobs:
       - uses: android-actions/setup-android@v3
 
       - name: Build
-        run: builder/build-app.sh "apps/${{ matrix.app }}"
+        id: build
+        run: |
+          set -euo pipefail
+          apks_file="$RUNNER_TEMP/apks.txt"
+          "apps/${{ matrix.app }}/build.sh" >"$apks_file"
+          echo "apks_file=$apks_file" >>"$GITHUB_OUTPUT"
+          cat "$apks_file"
 
       - name: Sign
         env:
-          SIGNING_KEY_PK8_B64: ${{ secrets.SIGNING_KEY_PK8_B64 }}
-          SIGNING_CERT_B64: ${{ secrets.SIGNING_CERT_B64 }}
+          SIGNING_KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_B64 }}
+          SIGNING_KEYSTORE_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
         run: |
           set -euo pipefail
-          mapfile -t apks < <(find "apps/${{ matrix.app }}" -path '*/build/outputs/apk/release/*.apk')
-          builder/sign-apk.sh "${apks[@]}"
+          mapfile -t apks <"${{ steps.build.outputs.apks_file }}"
+          builder/sign-apks.sh "${apks[@]}"
 
       - name: Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          hash=$(git -C "apps/${{ matrix.app }}" rev-parse --short HEAD)
+          mapfile -t apks <"${{ steps.build.outputs.apks_file }}"
+          hash=$(git -C "apps/${{ matrix.app }}/source" rev-parse --short HEAD)
           tag="${{ matrix.app }}-$hash"
-          mapfile -t apks < <(find "apps/${{ matrix.app }}" -path '*/build/outputs/apk/release/*.apk')
           gh release create "$tag" \
               --repo "${{ github.repository }}" \
               --title "$tag" \
