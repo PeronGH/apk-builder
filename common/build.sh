@@ -21,6 +21,15 @@ if [ -x "$app_dir/build.sh" ]; then
 fi
 
 src="$app_dir/source"
+
+if [ -d "$app_dir/patches" ]; then
+    for patch in "$app_dir/patches"/[0-9][0-9]-*.patch; do
+        [ -f "$patch" ] || continue
+        echo "applying $patch" >&2
+        git -C "$src" apply --whitespace=nowarn "$patch" >&2
+    done
+fi
+
 ks="$src/keyStore.jks"
 
 if [ ! -f "$ks" ]; then
