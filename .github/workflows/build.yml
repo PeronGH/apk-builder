@@ -1,0 +1,83 @@
+name: Build changed apps
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.detect.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - id: detect
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              mapfile -t names < <(find apps -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -u)
+          else
+              before='${{ github.event.before }}'
+              if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+                  before="HEAD~1"
+              fi
+              mapfile -t names < <(git diff --name-only "$before" HEAD -- apps/ | awk -F/ 'NF>=2 {print $2}' | sort -u)
+          fi
+          printf '%s\n' "${names[@]}"
+          json=$(printf '%s\n' "${names[@]}" | jq -R . | jq -sc '[.[] | select(length > 0)]')
+          echo "apps=$json" >>"$GITHUB_OUTPUT"
+
+  build:
+    needs: detect
+    if: needs.detect.outputs.apps != '[]' && needs.detect.outputs.apps != ''
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.detect.outputs.apps) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Build
+        run: builder/build-app.sh "apps/${{ matrix.app }}"
+
+      - name: Sign
+        env:
+          SIGNING_KEY_PK8_B64: ${{ secrets.SIGNING_KEY_PK8_B64 }}
+          SIGNING_CERT_B64: ${{ secrets.SIGNING_CERT_B64 }}
+        run: |
+          set -euo pipefail
+          mapfile -t apks < <(find "apps/${{ matrix.app }}" -path '*/build/outputs/apk/release/*.apk')
+          builder/sign-apk.sh "${apks[@]}"
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          hash=$(git -C "apps/${{ matrix.app }}" rev-parse --short HEAD)
+          tag="${{ matrix.app }}-$hash"
+          mapfile -t apks < <(find "apps/${{ matrix.app }}" -path '*/build/outputs/apk/release/*.apk')
+          gh release create "$tag" \
+              --repo "${{ github.repository }}" \
+              --title "$tag" \
+              --notes "Build of ${{ matrix.app }}@$hash" \
+              "${apks[@]}"
