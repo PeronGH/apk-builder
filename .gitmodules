@@ -1,0 +1,4 @@
+[submodule "os-updater"]
+	path = os-updater
+	url = https://github.com/oxygen-updater/os-updater
+	branch = master
