@@ -6,7 +6,7 @@ set -euo pipefail
 
 src="$(cd "$(dirname "$0")/source" && pwd)"
 
-ks="$src/keyStore.jks"
+ks="$src/app/keyStore.jks"
 if [ ! -f "$ks" ]; then
     keytool -genkeypair -noprompt \
         -keystore "$ks" \
