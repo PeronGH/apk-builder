@@ -2,3 +2,4 @@
 	path = os-updater
 	url = https://github.com/oxygen-updater/os-updater
 	branch = master
+	shallow = true
