@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # Sign (or re-sign) APKs in-place with the CI keystore via uber-apk-signer.
 # Env:
-#   SIGNING_KEYSTORE_B64      base64-encoded JKS/PKCS12 keystore
-#   SIGNING_KEYSTORE_PASSWORD keystore + key password
-#   SIGNING_KEY_ALIAS         alias of the key to use
+#   SIGNING_KEYSTORE_B64   base64-encoded JKS keystore, alias "release",
+#                          store + key password "apkbuilder".
 set -euo pipefail
 
 if [ $# -lt 1 ]; then
@@ -12,8 +11,6 @@ if [ $# -lt 1 ]; then
 fi
 
 : "${SIGNING_KEYSTORE_B64:?SIGNING_KEYSTORE_B64 not set}"
-: "${SIGNING_KEYSTORE_PASSWORD:?SIGNING_KEYSTORE_PASSWORD not set}"
-: "${SIGNING_KEY_ALIAS:?SIGNING_KEY_ALIAS not set}"
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
@@ -34,8 +31,8 @@ fi
 java -jar "$uas_jar" \
     --apks "$@" \
     --ks "$ks" \
-    --ksAlias "$SIGNING_KEY_ALIAS" \
-    --ksPass "$SIGNING_KEYSTORE_PASSWORD" \
-    --ksKeyPass "$SIGNING_KEYSTORE_PASSWORD" \
+    --ksAlias release \
+    --ksPass apkbuilder \
+    --ksKeyPass apkbuilder \
     --allowResign \
     --overwrite

@@ -81,8 +81,6 @@ jobs:
       - name: Sign
         env:
           SIGNING_KEYSTORE_B64: ${{ secrets.SIGNING_KEYSTORE_B64 }}
-          SIGNING_KEYSTORE_PASSWORD: ${{ secrets.SIGNING_KEYSTORE_PASSWORD }}
-          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
         run: |
           set -euo pipefail
           mapfile -t apks <"${{ steps.build.outputs.apks_file }}"
