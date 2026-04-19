@@ -2,7 +2,14 @@ diff --git a/app/src/main/java/com/oxygenupdater/OxygenUpdater.kt b/app/src/main
 index 9b1c45a..d38c4a7 100644
 --- a/app/src/main/java/com/oxygenupdater/OxygenUpdater.kt
 +++ b/app/src/main/java/com/oxygenupdater/OxygenUpdater.kt
-@@ -173,7 +173,7 @@ class OxygenUpdater : Application(), Configuration.Provider, SingletonImageLoade
+@@ -166,21 +166,21 @@ class OxygenUpdater : Application(), Configuration.Provider, SingletonImageLoade
+ 
+     /**
+      * Syncs analytics and crashlytics collection to user's preference.
+      *
+      * @see [FirebaseAnalytics.setAnalyticsCollectionEnabled]
+      * @see [FirebaseCrashlytics.setCrashlyticsCollectionEnabled]
+      */
      fun setupCrashReporting() {
          analytics.setUserProperty("device_name", SystemVersionProperties.deviceProductName)
  
@@ -11,11 +18,25 @@ index 9b1c45a..d38c4a7 100644
          // Sync analytics collection to user's preference
          analytics.setAnalyticsCollectionEnabled(shouldShareLogs)
          // Sync crashlytics collection to user's preference, but only if we're on a release build
+         crashlytics.isCrashlyticsCollectionEnabled = shouldShareLogs && !BuildConfig.DEBUG
+     }
+ 
+     private fun setupNetworkCallback() = getSystemService<ConnectivityManager>()?.run {
+         // Posting initial value is required, as [networkCallback]'s
+         // methods get called only when network connectivity changes
+         @Suppress("DEPRECATION")
 diff --git a/app/src/main/java/com/oxygenupdater/activities/MainActivity.kt b/app/src/main/java/com/oxygenupdater/activities/MainActivity.kt
 index 6ab5ba3..9fc8485 100644
 --- a/app/src/main/java/com/oxygenupdater/activities/MainActivity.kt
 +++ b/app/src/main/java/com/oxygenupdater/activities/MainActivity.kt
-@@ -1153,6 +1153,7 @@ class MainActivity : AppCompatActivity() {
+@@ -1146,20 +1146,21 @@ class MainActivity : AppCompatActivity() {
+         // Only one will be active at any time, so update reference
+         bannerAdView = adView
+ 
+         /** Load only if [setupMobileAds] has been called via [setupUmp] */
+         if (mobileAdsInitDone.get()) loadBannerAd(bannerAdView)
+     }
+ 
      private val mobileAdsInitDone = AtomicBoolean(false)
      private fun setupMobileAds() {
          if (mobileAdsInitDone.get()) return else mobileAdsInitDone.set(true)
@@ -23,6 +44,13 @@ index 6ab5ba3..9fc8485 100644
  
          MobileAds.initialize(this)
          MobileAds.setRequestConfiguration(MobileAds.getRequestConfiguration().toBuilder().apply {
+             // If it's a debug build, add current device's ID to the list of test device IDs for ads
+             if (BuildConfig.DEBUG) setTestDeviceIds(buildList(2) {
+                 /** (uppercase) MD5 checksum of "emulator" */
+                 add(AdRequest.DEVICE_ID_EMULATOR)
+ 
+                 /**
+                  * (uppercase) MD5 checksum of [Settings.Secure.ANDROID_ID],
 diff --git a/app/src/main/java/com/oxygenupdater/ui/common/BannerAd.kt b/app/src/main/java/com/oxygenupdater/ui/common/BannerAd.kt
 index 3aa6f92..afcd3de 100644
 --- a/app/src/main/java/com/oxygenupdater/ui/common/BannerAd.kt
