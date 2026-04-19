@@ -12,6 +12,6 @@ if [ -z "$before" ] || ! git -C "$repo_root" rev-parse --verify --quiet "$before
     exit 0
 fi
 
-if git -C "$repo_root" diff --quiet "$before" HEAD -- "$rel/source"; then
+if git -C "$repo_root" diff --quiet "$before" HEAD -- "$rel"; then
     exit 1
 fi
