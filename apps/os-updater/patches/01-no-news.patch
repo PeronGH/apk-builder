@@ -1,0 +1,26 @@
+diff --git a/app/src/main/java/com/oxygenupdater/ui/main/Routes.kt b/app/src/main/java/com/oxygenupdater/ui/main/Routes.kt
+index 5ce4e32..e7dd813 100644
+--- a/app/src/main/java/com/oxygenupdater/ui/main/Routes.kt
++++ b/app/src/main/java/com/oxygenupdater/ui/main/Routes.kt
+@@ -24,21 +24,20 @@ sealed interface Route : NavKey {
+      * Required, must be unique. Used as a key in [androidx.navigation3.runtime.EntryProviderScope.entry]
+      * via [androidx.navigation3.runtime.defaultContentKey].
+      */
+     override fun toString(): String
+ }
+ 
+ sealed interface ChildRoute : Route
+ 
+ val MainRoutes = arrayOf(
+     MainRoute.Update,
+-    MainRoute.NewsList,
+     MainRoute.Device,
+     MainRoute.About,
+     MainRoute.Settings,
+ )
+ 
+ @Immutable
+ sealed class MainRoute(
+     val icon: ImageVector,
+     @StringRes override val labelResId: Int,
+     val useVersionName: Boolean = false,
