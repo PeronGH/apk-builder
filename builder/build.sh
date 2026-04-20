@@ -3,10 +3,9 @@
 #
 # usage: build.sh <app-dir>
 #
-# Patches under apps/<name>/patches/NN-*.patch are applied first. Then,
-# if apps/<name>/build.sh exists, dispatches to it. Otherwise, runs the
-# default: throwaway keystore + gradle assembleRelease. The pipeline
-# re-signs the resulting APKs with the real key.
+# Patches under apps/<name>/patches/NN-*.patch are applied first, then
+# apps/<name>/build.sh runs. Every app declares its own build.sh —
+# typical ones are a 3-line wrapper around common/default-build.sh.
 set -euo pipefail
 
 if [ $# -lt 1 ]; then
@@ -14,8 +13,6 @@ if [ $# -lt 1 ]; then
     exit 2
 fi
 
-here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-common="$here/../common"
 app_dir="$(cd "$1" && pwd)"
 src="$app_dir/source"
 
@@ -27,23 +24,9 @@ if [ -d "$app_dir/patches" ]; then
     done
 fi
 
-if [ -x "$app_dir/build.sh" ]; then
-    exec "$app_dir/build.sh"
+if [ ! -x "$app_dir/build.sh" ]; then
+    echo "$app_dir/build.sh missing or not executable" >&2
+    exit 1
 fi
 
-ks="$src/keyStore.jks"
-"$common/keystore.sh" "$ks" >&2
-
-# Two filenames because different gradle setups read one or the other
-# (os-updater: keystore.properties, MaterialFiles: signing.properties).
-# Same key/value shape, so we just write both.
-for name in keystore.properties signing.properties; do
-    cat >"$src/$name" <<EOF
-storeFile=$ks
-storePassword=apkbuilder
-keyAlias=apkbuilder
-keyPassword=apkbuilder
-EOF
-done
-
-exec "$common/gradle-release.sh" "$src"
+exec "$app_dir/build.sh"
