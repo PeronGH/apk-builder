@@ -3,3 +3,8 @@
 	url = https://github.com/oxygen-updater/os-updater
 	branch = master
 	shallow = true
+[submodule "materialfiles"]
+	path = apps/materialfiles/source
+	url = https://github.com/zhanghai/MaterialFiles
+	branch = master
+	shallow = true
