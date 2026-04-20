@@ -3,10 +3,10 @@
 #
 # usage: build.sh <app-dir>
 #
-# If apps/<name>/build.sh exists, defers to it. Otherwise, runs the
-# default gradle build: generate a throwaway keystore (to satisfy any
-# hard-required release signingConfig), run ./gradlew assembleRelease,
-# and list release APKs. The pipeline re-signs with the real key.
+# Patches under apps/<name>/patches/NN-*.patch are applied first. Then,
+# if apps/<name>/build.sh exists, dispatches to it. Otherwise, runs the
+# default: throwaway keystore + gradle assembleRelease. The pipeline
+# re-signs the resulting APKs with the real key.
 set -euo pipefail
 
 if [ $# -lt 1 ]; then
@@ -14,6 +14,8 @@ if [ $# -lt 1 ]; then
     exit 2
 fi
 
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+common="$here/../common"
 app_dir="$(cd "$1" && pwd)"
 src="$app_dir/source"
 
@@ -30,16 +32,7 @@ if [ -x "$app_dir/build.sh" ]; then
 fi
 
 ks="$src/keyStore.jks"
-
-if [ ! -f "$ks" ]; then
-    keytool -genkeypair -noprompt \
-        -keystore "$ks" \
-        -alias apkbuilder \
-        -keyalg RSA -keysize 2048 \
-        -validity 3650 \
-        -storepass apkbuilder -keypass apkbuilder \
-        -dname "CN=apk-builder" >&2
-fi
+"$common/keystore.sh" "$ks" >&2
 
 cat >"$src/keystore.properties" <<EOF
 storePassword=apkbuilder
@@ -48,6 +41,4 @@ keyAlias=apkbuilder
 storeFile=$ks
 EOF
 
-(cd "$src" && ./gradlew assembleRelease) >&2
-
-find "$src" -path '*/build/outputs/apk/release/*.apk' -print
+exec "$common/gradle-release.sh" "$src"

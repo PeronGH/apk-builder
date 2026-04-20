@@ -41,7 +41,7 @@ jobs:
                   changed+=("$name")
                   continue
               fi
-              if BEFORE_SHA="$BEFORE_SHA" common/changed.sh "$dir"; then
+              if BEFORE_SHA="$BEFORE_SHA" builder/changed.sh "$dir"; then
                   changed+=("$name")
               fi
           done
@@ -74,7 +74,7 @@ jobs:
         run: |
           set -euo pipefail
           apks_file="$RUNNER_TEMP/apks.txt"
-          common/build.sh "apps/${{ matrix.app }}" >"$apks_file"
+          builder/build.sh "apps/${{ matrix.app }}" >"$apks_file"
           echo "apks_file=$apks_file" >>"$GITHUB_OUTPUT"
           cat "$apks_file"
 
