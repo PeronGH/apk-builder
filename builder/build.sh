@@ -34,11 +34,16 @@ fi
 ks="$src/keyStore.jks"
 "$common/keystore.sh" "$ks" >&2
 
-cat >"$src/keystore.properties" <<EOF
-storePassword=apkbuilder
-keyPassword=apkbuilder
-keyAlias=apkbuilder
+# Two filenames because different gradle setups read one or the other
+# (os-updater: keystore.properties, MaterialFiles: signing.properties).
+# Same key/value shape, so we just write both.
+for name in keystore.properties signing.properties; do
+    cat >"$src/$name" <<EOF
 storeFile=$ks
+storePassword=apkbuilder
+keyAlias=apkbuilder
+keyPassword=apkbuilder
 EOF
+done
 
 exec "$common/gradle-release.sh" "$src"
