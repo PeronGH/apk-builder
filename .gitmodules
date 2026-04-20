@@ -8,3 +8,8 @@
 	url = https://github.com/zhanghai/MaterialFiles
 	branch = master
 	shallow = true
+[submodule "telegram"]
+	path = apps/telegram/source
+	url = https://github.com/DrKLO/Telegram
+	branch = master
+	shallow = true
