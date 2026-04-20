@@ -1,0 +1,56 @@
+diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java b/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
+index 32cb1cf3d..46d7d79cc 100644
+--- a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
++++ b/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
+@@ -20641,20 +20641,24 @@ public class MessagesController extends BaseController implements NotificationCe
+             } else {
+                 req.top_msg_id = (int) topicId;
+                 req.flags |= 1;
+             }
+         }
+         getConnectionsManager().sendRequest(req, (response, error) -> {});
+         NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_REACTIONS_READ);
+     }
+ 
+     public SponsoredMessagesInfo getSponsoredMessages(long dialogId) {
++        return null;
++    }
++
++    private SponsoredMessagesInfo getSponsoredMessagesOriginal(long dialogId) {
+         SponsoredMessagesInfo info = sponsoredMessages.get(dialogId);
+         if (info != null && (info.loading || Math.abs(SystemClock.elapsedRealtime() - info.loadTime) <= 5 * 60 * 1000)) {
+             return info;
+         }
+         if (dialogId < 0 ? !ChatObject.isChannel(getChat(-dialogId)) : !UserObject.isBot(getUser(dialogId))) {
+             return null;
+         }
+         info = new SponsoredMessagesInfo();
+         info.loading = true;
+         sponsoredMessages.put(dialogId, info);
+diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/video/VideoAds.java b/TMessagesProj/src/main/java/org/telegram/messenger/video/VideoAds.java
+index 3a348c076..c1f95cab6 100644
+--- a/TMessagesProj/src/main/java/org/telegram/messenger/video/VideoAds.java
++++ b/TMessagesProj/src/main/java/org/telegram/messenger/video/VideoAds.java
+@@ -168,20 +168,22 @@ public class VideoAds {
+         if (!loaded) {
+             load();
+         } else {
+             schedule();
+         }
+     }
+ 
+     private int requestId;
+     private boolean loading, loaded;
+     private void load() {
++        loaded = true;
++        if (true) return;
+         if (loading || loaded) return;
+ 
+         if (UserConfig.getInstance(currentAccount).isPremium() && MessagesController.getInstance(currentAccount).isSponsoredDisabled()) {
+             return;
+         }
+ 
+         loading = true;
+ 
+         TLRPC.TL_messages_getSponsoredMessages req = new TLRPC.TL_messages_getSponsoredMessages();
+         req.peer = MessagesController.getInstance(currentAccount).getInputPeer(dialogId);
