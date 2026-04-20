@@ -15,11 +15,6 @@ if [ $# -lt 1 ]; then
 fi
 
 app_dir="$(cd "$1" && pwd)"
-
-if [ -x "$app_dir/build.sh" ]; then
-    exec "$app_dir/build.sh"
-fi
-
 src="$app_dir/source"
 
 if [ -d "$app_dir/patches" ]; then
@@ -28,6 +23,10 @@ if [ -d "$app_dir/patches" ]; then
         echo "applying $patch" >&2
         patch -p1 --forward --fuzz=3 -d "$src" <"$patch" >&2
     done
+fi
+
+if [ -x "$app_dir/build.sh" ]; then
+    exec "$app_dir/build.sh"
 fi
 
 ks="$src/keyStore.jks"
