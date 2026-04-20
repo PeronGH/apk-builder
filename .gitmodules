@@ -3,8 +3,3 @@
 	url = https://github.com/oxygen-updater/os-updater
 	branch = master
 	shallow = true
-[submodule "kernelsu-next"]
-	path = apps/kernelsu-next/source
-	url = https://github.com/KernelSU-Next/KernelSU-Next
-	branch = stable
-	shallow = true
