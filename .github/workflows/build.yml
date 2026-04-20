@@ -10,6 +10,12 @@ on:
       app:
         description: Build only this app (empty = all)
         required: false
+  workflow_call:
+    inputs:
+      before:
+        description: Baseline SHA for change detection
+        type: string
+        required: false
 
 permissions:
   contents: write
@@ -26,24 +32,23 @@ jobs:
 
       - id: detect
         env:
-          BEFORE_SHA: ${{ github.event.before }}
-          EVENT: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before || inputs.before }}
           APP_INPUT: ${{ github.event.inputs.app }}
         run: |
           set -euo pipefail
           declare -a changed=()
           for dir in apps/*/; do
               name="$(basename "$dir")"
-              if [ "$EVENT" = "workflow_dispatch" ]; then
-                  if [ -n "${APP_INPUT:-}" ] && [ "$APP_INPUT" != "$name" ]; then
-                      continue
+              if [ -n "${BEFORE_SHA:-}" ]; then
+                  if BEFORE_SHA="$BEFORE_SHA" builder/changed.sh "$dir"; then
+                      changed+=("$name")
                   fi
-                  changed+=("$name")
                   continue
               fi
-              if BEFORE_SHA="$BEFORE_SHA" builder/changed.sh "$dir"; then
-                  changed+=("$name")
+              if [ -n "${APP_INPUT:-}" ] && [ "$APP_INPUT" != "$name" ]; then
+                  continue
               fi
+              changed+=("$name")
           done
           printf 'changed: %s\n' "${changed[@]:-<none>}"
           json=$(printf '%s\n' "${changed[@]:-}" | jq -R . | jq -sc '[.[] | select(length > 0)]')
