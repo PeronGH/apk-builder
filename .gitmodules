@@ -13,3 +13,8 @@
 	url = https://github.com/DrKLO/Telegram
 	branch = master
 	shallow = true
+[submodule "v2rayng"]
+	path = apps/v2rayng/source
+	url = https://github.com/2dust/v2rayNG
+	branch = master
+	shallow = true

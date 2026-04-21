@@ -1,0 +1,29 @@
+diff --git a/V2rayNG/app/build.gradle.kts b/V2rayNG/app/build.gradle.kts
+--- a/V2rayNG/app/build.gradle.kts
++++ b/V2rayNG/app/build.gradle.kts
+@@ -16,24 +16,5 @@ android {
+         versionName = "2.1.1"
+         multiDexEnabled = true
+
+-        val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
+-        splits {
+-            abi {
+-                isEnable = true
+-                reset()
+-                if (abiFilterList != null && abiFilterList.isNotEmpty()) {
+-                    include(*abiFilterList.toTypedArray())
+-                } else {
+-                    include(
+-                        "arm64-v8a",
+-                        "armeabi-v7a",
+-                        "x86_64",
+-                        "x86"
+-                    )
+-                }
+-                isUniversalApk = abiFilterList.isNullOrEmpty()
+-            }
+-        }
+-
+         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+     }
+
