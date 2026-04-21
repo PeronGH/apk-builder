@@ -6,8 +6,9 @@
 #   * libv2ray.aar, shipped as a binary release of 2dust/AndroidLibXrayLite
 #     — we download the release matching the pinned submodule tag rather
 #     than rebuild the Go core ourselves.
-# compile-hevtun.sh calls $NDK_HOME/ndk-build, so we install the NDK that
-# upstream pins (28.2.13676358) and point NDK_HOME at it.
+# compile-hevtun.sh calls $NDK_HOME/ndk-build; we reuse whichever NDK the
+# runner image already ships (exposed as ANDROID_NDK_HOME) so we don't
+# pay for another few-GB sdkmanager download on every build.
 # Patches drop the ABI splits block so one universal APK is produced per
 # flavor; we scope gradle to the playstore flavor since the fdroid flavor
 # suffixes the applicationId with ".fdroid".
@@ -15,10 +16,8 @@ set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
 src="$here/source"
-ndk_version="28.2.13676358"
 
-sdkmanager --install "ndk;$ndk_version" >&2
-export NDK_HOME="$ANDROID_HOME/ndk/$ndk_version"
+export NDK_HOME="${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:?no NDK available — set ANDROID_NDK_HOME}}"
 
 (cd "$src" && bash compile-hevtun.sh) >&2
 mkdir -p "$src/V2rayNG/app/libs"
