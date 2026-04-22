@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       before: ${{ steps.bump.outputs.before }}
+      after: ${{ steps.bump.outputs.after }}
       bumped: ${{ steps.bump.outputs.bumped }}
     steps:
       - uses: actions/checkout@v4
@@ -47,6 +48,7 @@ jobs:
 
           git push
           echo "bumped=true" >>"$GITHUB_OUTPUT"
+          echo "after=$(git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
 
   build:
     needs: bump
@@ -54,4 +56,5 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       before: ${{ needs.bump.outputs.before }}
+      sha: ${{ needs.bump.outputs.after }}
     secrets: inherit

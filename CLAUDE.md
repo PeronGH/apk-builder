@@ -58,3 +58,4 @@ Build-sign → release-resign is the expected flow for every app. Apps with upst
 - **Wait for CI evidence before defensive fixes** more generally — no workarounds ahead of a real failure.
 - **Release tag = `<app>-<short-sha>` of the submodule HEAD.** `build.yml` deletes and recreates the tag on each run, so fixup commits overwrite the same tag.
 - **`bump.yml` commits per-app** (`chore: bump <app>`) and passes the pre-bump SHA as `before` to `build.yml`, so only the bumped apps rebuild.
+- **Reusable workflows pin to the caller's SHA.** When `bump.yml` calls `build.yml` via `workflow_call`, `github.sha` inside build.yml is the caller's commit — i.e. the pre-bump state. That's why `bump.yml` also outputs `after` (post-push HEAD) and passes it as `sha`, and why `build.yml`'s checkouts use `ref: ${{ inputs.sha || github.sha }}`. Without this, detect compares HEAD against itself and finds no changes.

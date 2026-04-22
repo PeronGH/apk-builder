@@ -16,6 +16,10 @@ on:
         description: Baseline SHA for change detection
         type: string
         required: false
+      sha:
+        description: SHA to check out (defaults to the caller's commit)
+        type: string
+        required: false
 
 permissions:
   contents: write
@@ -25,9 +29,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       apps: ${{ steps.detect.outputs.apps }}
+      sha: ${{ inputs.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.sha || github.sha }}
           fetch-depth: 0
 
       - id: detect
@@ -65,6 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ needs.detect.outputs.sha }}
           submodules: recursive
 
       - uses: actions/setup-java@v4
