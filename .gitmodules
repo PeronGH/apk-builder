@@ -18,3 +18,8 @@
 	url = https://github.com/2dust/v2rayNG
 	branch = master
 	shallow = true
+[submodule "ota-pulse"]
+	path = apps/ota-pulse/source
+	url = https://github.com/RemuruSama/OTA-Pulse.git
+	branch = main
+	shallow = true
