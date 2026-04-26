@@ -1,24 +1,16 @@
 #!/usr/bin/env bash
 # OTA-Pulse hardcodes its signingConfig: alias "release", reads
 # STORE_PASSWORD/KEY_PASSWORD (uppercase) from keystore.properties,
-# and resolves storeFile to keystore.jks at the project root. None
-# of those match common/default-build.sh's defaults, so generate the
-# build-time keystore inline and call gradle-release.sh directly.
+# and resolves storeFile to keystore.jks at the project root. The
+# property shape doesn't match common/default-build.sh, so generate
+# the keystore via common/keystore.sh (with an "release" alias
+# override) and write our own properties file before handing off.
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
 src="$here/source"
-ks="$src/keystore.jks"
 
-if [ ! -f "$ks" ]; then
-    keytool -genkeypair -noprompt \
-        -keystore "$ks" \
-        -alias release \
-        -keyalg RSA -keysize 2048 \
-        -validity 3650 \
-        -storepass apkbuilder -keypass apkbuilder \
-        -dname "CN=apk-builder" >&2
-fi
+"$here/../../common/keystore.sh" "$src/keystore.jks" release >&2
 
 cat >"$src/keystore.properties" <<EOF
 STORE_PASSWORD=apkbuilder
