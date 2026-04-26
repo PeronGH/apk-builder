@@ -1,0 +1,10 @@
+diff --git a/gradle.properties b/gradle.properties
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -19,6 +19,3 @@
+ # --- OPTIMIZATIONS ---
+ # Recommended by the warning logs to improve performance
+ android.dependency.excludeLibraryComponentsFromConstraints=true
+-
+-# Custom Java Home
+-org.gradle.java.home=C:/Program Files/Android/Android Studio/jbr
