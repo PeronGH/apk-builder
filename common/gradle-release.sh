@@ -17,5 +17,6 @@ fi
 root="$(cd "$1" && pwd)"
 task="${2:-assembleRelease}"
 
+chmod +x "$root/gradlew"
 (cd "$root" && ./gradlew "$task") >&2
 find "$root" -path '*/build/outputs/apk/*.apk' ! -path '*/debug/*' -print
