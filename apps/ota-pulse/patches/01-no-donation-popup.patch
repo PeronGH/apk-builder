@@ -1,0 +1,13 @@
+diff --git a/app/src/main/java/com/abhinav/otapulse/app/MainActivity.kt b/app/src/main/java/com/abhinav/otapulse/app/MainActivity.kt
+index e36bd22..32a9cb9 100644
+--- a/app/src/main/java/com/abhinav/otapulse/app/MainActivity.kt
++++ b/app/src/main/java/com/abhinav/otapulse/app/MainActivity.kt
+@@ -153,7 +153,7 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
+         if (savedInstanceState == null) {
+             binding.root.post {
+                 if (!isDestroyed && !isFinishing) {
+-                    showSupportDeveloperDialog()
++                    // patch: skip donation popup
+                 }
+             }
+         }
