@@ -1,0 +1,30 @@
+diff --git a/app/src/main/java/com/oxygenupdater/repositories/BillingRepository.kt b/app/src/main/java/com/oxygenupdater/repositories/BillingRepository.kt
+index b0bb63e..53f1b89 100644
+--- a/app/src/main/java/com/oxygenupdater/repositories/BillingRepository.kt
++++ b/app/src/main/java/com/oxygenupdater/repositories/BillingRepository.kt
+@@ -139,23 +139,10 @@ class BillingRepository @Inject constructor(
+      * Flow of the [ad-free][PurchaseType.AD_FREE] SKU's [SkuState]
+      */
+     val adFreeState
+-        get() = getSkuState(SkuInappAdFree).distinctUntilChanged()
++        get() = flowOf(SkuState.PurchasedAndAcknowledged) // patch: pretend ad-free is owned
+ 
+     val shouldShowAds
+-        get() = adFreeState.map {
+-            logDebug(TAG, "[adFreeState] $it")
+-
+-            val hasPurchasedAdFree = if (it == SkuState.Unknown) {
+-                // Fallback to SharedPreferences if purchases haven't been processed yet
+-                sharedPreferences[KeyAdFree, false]
+-            } else it == SkuState.PurchasedAndAcknowledged
+-
+-            logDebug(TAG, "[hasPurchasedAdFree] saving to SharedPreferences: $hasPurchasedAdFree")
+-            // Save, because we can guarantee that the device is online and that the purchase check has succeeded
+-            sharedPreferences[KeyAdFree] = hasPurchasedAdFree
+-
+-            !hasPurchasedAdFree // show ads only if user has not purchased ad-free
+-        }.distinctUntilChanged()
++        get() = flowOf(false) // patch: pretend ad-free is owned
+ 
+     /**
+      * A Flow that reports on purchases that are in the [PurchaseState.PENDING]
