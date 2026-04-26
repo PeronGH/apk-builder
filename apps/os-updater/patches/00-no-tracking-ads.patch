@@ -2,14 +2,7 @@ diff --git a/app/src/main/java/com/oxygenupdater/OxygenUpdater.kt b/app/src/main
 index 9b1c45a..d38c4a7 100644
 --- a/app/src/main/java/com/oxygenupdater/OxygenUpdater.kt
 +++ b/app/src/main/java/com/oxygenupdater/OxygenUpdater.kt
-@@ -166,21 +166,21 @@ class OxygenUpdater : Application(), Configuration.Provider, SingletonImageLoade
- 
-     /**
-      * Syncs analytics and crashlytics collection to user's preference.
-      *
-      * @see [FirebaseAnalytics.setAnalyticsCollectionEnabled]
-      * @see [FirebaseCrashlytics.setCrashlyticsCollectionEnabled]
-      */
+@@ -173,7 +173,7 @@ class OxygenUpdater : Application(), Configuration.Provider, SingletonImageLoade
      fun setupCrashReporting() {
          analytics.setUserProperty("device_name", SystemVersionProperties.deviceProductName)
  
@@ -18,139 +11,107 @@ index 9b1c45a..d38c4a7 100644
          // Sync analytics collection to user's preference
          analytics.setAnalyticsCollectionEnabled(shouldShareLogs)
          // Sync crashlytics collection to user's preference, but only if we're on a release build
-         crashlytics.isCrashlyticsCollectionEnabled = shouldShareLogs && !BuildConfig.DEBUG
-     }
- 
-     private fun setupNetworkCallback() = getSystemService<ConnectivityManager>()?.run {
-         // Posting initial value is required, as [networkCallback]'s
-         // methods get called only when network connectivity changes
-         @Suppress("DEPRECATION")
 diff --git a/app/src/main/java/com/oxygenupdater/activities/MainActivity.kt b/app/src/main/java/com/oxygenupdater/activities/MainActivity.kt
-index 6ab5ba3..9fc8485 100644
+index bb62227..23c2716 100644
 --- a/app/src/main/java/com/oxygenupdater/activities/MainActivity.kt
 +++ b/app/src/main/java/com/oxygenupdater/activities/MainActivity.kt
-@@ -1146,20 +1146,21 @@ class MainActivity : AppCompatActivity() {
-         // Only one will be active at any time, so update reference
-         bannerAdView = adView
- 
-         /** Load only if [setupMobileAds] has been called via [setupUmp] */
-         if (mobileAdsInitDone.get()) loadBannerAd(bannerAdView)
-     }
- 
+@@ -1112,6 +1112,7 @@ class MainActivity : AppCompatActivity() {
      private val mobileAdsInitDone = AtomicBoolean(false)
      private fun setupMobileAds() {
          if (mobileAdsInitDone.get()) return else mobileAdsInitDone.set(true)
 +        if (true) return // patch: skip ad SDK init
  
-         MobileAds.initialize(this)
-         MobileAds.setRequestConfiguration(MobileAds.getRequestConfiguration().toBuilder().apply {
-             // If it's a debug build, add current device's ID to the list of test device IDs for ads
-             if (BuildConfig.DEBUG) setTestDeviceIds(buildList(2) {
-                 /** (uppercase) MD5 checksum of "emulator" */
-                 add(AdRequest.DEVICE_ID_EMULATOR)
- 
-                 /**
-                  * (uppercase) MD5 checksum of [Settings.Secure.ANDROID_ID],
+         // Init Google Mobile Ads SDK on a background thread
+         CoroutineScope(Dispatchers.IO).launch {
 diff --git a/app/src/main/java/com/oxygenupdater/ui/common/BannerAd.kt b/app/src/main/java/com/oxygenupdater/ui/common/BannerAd.kt
-index 3aa6f92..afcd3de 100644
+index ced7fad..73e0946 100644
 --- a/app/src/main/java/com/oxygenupdater/ui/common/BannerAd.kt
 +++ b/app/src/main/java/com/oxygenupdater/ui/common/BannerAd.kt
-@@ -1,93 +1,25 @@
- package com.oxygenupdater.ui.common
- 
--import android.os.Bundle
- import androidx.compose.foundation.layout.ColumnScope
--import androidx.compose.material3.Text
- import androidx.compose.runtime.Composable
--import androidx.compose.ui.Alignment
- import androidx.compose.ui.Modifier
--import androidx.compose.ui.platform.LocalInspectionMode
--import androidx.compose.ui.viewinterop.AndroidView
--import com.google.ads.mediation.admob.AdMobAdapter
- import com.google.android.gms.ads.AdListener
- import com.google.android.gms.ads.AdRequest
--import com.google.android.gms.ads.AdSize
- import com.google.android.gms.ads.AdView
--import com.google.android.gms.ads.LoadAdError
--import com.oxygenupdater.utils.logDebug
- 
--/**
-- * Lays out an [AdView]. Note that [AdView.loadAd] is not called in the factory
-- * block here. Instead, call it via the reference received from [onViewUpdate].
-- *
-- * @param adListener act on ad callbacks, usually via [adLoadListener]
-- *
-- * @see com.oxygenupdater.activities.MainActivity.onBannerAdInit
-- */
- @Composable
- fun ColumnScope.BannerAd(
-     adUnitId: String,
--    adWidth: Int, // dp
-+    adWidth: Int,
-     modifier: Modifier = Modifier,
-     adListener: AdListener? = null,
-     onViewUpdate: (AdView) -> Unit,
--) = if (LocalInspectionMode.current) {
+@@ -49,86 +49,7 @@ fun ColumnScope.BannerAd(
+     navType: NavType,
+     forceAdReload: Boolean,
+     addNavBarPadding: Boolean,
+-): Unit = if (LocalInspectionMode.current) {
 -    Text("AdView", Modifier.align(Alignment.CenterHorizontally))
--} else AndroidView(
--    factory = { context ->
--        AdView(context).apply {
--            setAdUnitId(adUnitId)
--            /**
--             * TODO(compose/ads): factory block doesn't execute again when [adWidth] changes,
--             *  meaning [AdView.setAdSize] is never updated. Ideally we want it to, and also
--             *  have the ad reloaded for an orientation change.
--             */
--            setAdSize(AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, adWidth))
+-} else {
+-    var loaded by rememberState(false)
 -
--            adListener?.let { setAdListener(it) }
+-    val density = LocalDensity.current.density
+-    val adSize = remember(navType) {
+-        val adWidthPx = if (SDK_INT >= VERSION_CODES.R) {
+-            val metrics = activity.windowManager.currentWindowMetrics
+-            val insets = metrics.windowInsets.getInsets(WindowInsets.Type.systemBars())
+-
+-            metrics.bounds.width() - (insets.right + insets.left)
+-        } else activity.resources.displayMetrics.widthPixels
+-
+-        /**
+-         * Note: keep in sync with
+-         * [androidx.compose.material3.tokens.NavigationRailCollapsedTokens.NarrowContainerWidth]
+-         * */
+-        val sideRailWidth = if (navType == NavType.SideRail) 80 + 1 else 0
+-        val adWidth = (adWidthPx / density.fastCoerceAtLeast(1f)).toInt() - sideRailWidth
+-
+-        /**
+-         * TODO(ads): [AdView.setAdSize] can only be called once per [AdView], which means we can't
+-         *  update its size when [navType] changes. Figure out how to discard the old one and reload.
+-         */
+-        AdSize.getLargeAnchoredAdaptiveBannerAdSize(activity, adWidth)
+-    }
+-
+-    val adView = remember {
+-        AdView(activity).apply {
+-            // Both of these can only be set once per AdView
+-            adUnitId = BuildConfig.AD_BANNER_MAIN_ID
+-            setAdSize(adSize).also { logDebug(TAG, "Requested size: $adSize") }
+-
+-            adListener = object : AdListener() {
+-                override fun onAdFailedToLoad(error: LoadAdError) {
+-                    loaded = false
+-                    logDebug(TAG, "Banner ad failed to load: $error")
+-                }
+-
+-                override fun onAdLoaded() {
+-                    loaded = true
+-                    val adapterResponseInfo = responseInfo?.loadedAdapterResponseInfo
+-                    val adapterClassName = adapterResponseInfo?.adapterClassName
+-                    val adSourceName = adapterResponseInfo?.adSourceName
+-                    val latencyMillis = adapterResponseInfo?.latencyMillis
+-                    logDebug(TAG, "$adapterClassName: LOADED $adSourceName $adSize ($latencyMillis ms)")
+-                }
+-            }
 -        }
--    },
--    update = onViewUpdate,
--    modifier = modifier
--)
+-    }
+-
+-    LaunchedEffect(forceAdReload) {
+-        if (loaded || adView.isLoading) {
+-            logDebug(TAG, "Skipping load, previous is pending (loaded=$loaded, adViewIsLoading: ${adView.isLoading})")
+-            return@LaunchedEffect
+-        }
+-
+-        logDebug(TAG, "Loading")
+-        adView.loadAd(buildAdRequest())
+-    }
+-
+-    AndroidView(
+-        factory = { adView },
+-        // We draw the activity edge-to-edge, so nav bar padding should be applied only if ad loaded
+-        modifier = (if (addNavBarPadding && loaded) Modifier.navigationBarsPadding() else Modifier)
+-            .align(Alignment.CenterHorizontally)
+-            .wrapContentSize()
+-    )
+-
+-    // Pause and resume the AdView when the lifecycle is paused and resumed
+-    LifecycleResumeEffect(adView) {
+-        adView.resume()
+-        onPauseOrDispose { adView.pause() }
+-    }
+-
+-    DisposableEffect(Unit) {
+-        // Destroy the AdView to prevent memory leaks when the screen is disposed
+-        onDispose { adView.destroy() }
+-    }
 +) {
-+}
- 
--/**
-- * @param collapsibleBanner Default `false`. Controls whether we use Google's new collapsible
-- *        banner ad format: https://developers.google.com/admob/android/banner/collapsible.
-- *        **Note**: while collapsible banner ads have higher eCPMs, they have terrible UX,
-- *        and so it shouldn't be enabled again unless Google improves on this front. Firstly,
-- *        the button to collapse it is sometimes either very small, or in some cases it's not
-- *        there at all (we've received screenshots over email). It also has a bug that has
-- *        existed at least since https://github.com/oxygen-updater/oxygen-updater/commit/79a7eb9f0cc4969bfad4234f8681c6fd1c922425.
-- *        Back then (Aug 16, 2024), this format was marked 'experimental', but this bug still
-- *        exists even though it's not experimental anymore. By memory, the culprit ads usually
-- *        were TikTok or Temu that were full-height without collapsible buttons. Not sure.
-- *        This entire doc-comment is kept so that the next time we feel tempted to turn it on
-- *        again, we're reminded of everything wrong with the format. (especially user experience!)
-- */
--inline fun buildAdRequest(
--    collapsibleBanner: Boolean = false,
--) = AdRequest.Builder().apply {
--    // https://developers.google.com/admob/android/banner/collapsible
--    if (collapsibleBanner) addNetworkExtrasBundle(AdMobAdapter::class.java, Bundle().apply {
--        putString("collapsible", "bottom")
--    })
--}.build()
-+inline fun buildAdRequest(collapsibleBanner: Boolean = false): AdRequest = AdRequest.Builder().build()
- 
--fun loadBannerAd(adView: AdView?) = adView?.loadAd(buildAdRequest())?.also {
--    logDebug(TAG, "loading")
--} ?: logDebug(TAG, "adView = null")
-+fun loadBannerAd(adView: AdView?) = Unit
- 
- fun adLoadListener(callback: (loaded: Boolean) -> Unit) = object : AdListener() {
--    override fun onAdFailedToLoad(error: LoadAdError) {
--        logDebug(TAG, "Banner ad failed to load: $error")
--        callback(false)
--    }
--
--    override fun onAdLoaded() {
--        logDebug(TAG, "Banner ad loaded")
--        callback(true)
--    }
  }
--
--private const val TAG = "BannerAd"
+ 
+ /**
