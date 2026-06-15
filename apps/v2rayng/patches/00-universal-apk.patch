@@ -1,16 +1,17 @@
 diff --git a/V2rayNG/app/build.gradle.kts b/V2rayNG/app/build.gradle.kts
+index c61a48e..0452e3c 100644
 --- a/V2rayNG/app/build.gradle.kts
 +++ b/V2rayNG/app/build.gradle.kts
-@@ -16,24 +16,5 @@ android {
-         versionName = "2.1.1"
+@@ -16,25 +16,6 @@ android {
+         versionName = "2.2.4"
          multiDexEnabled = true
-
+ 
 -        val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
 -        splits {
 -            abi {
 -                isEnable = true
 -                reset()
--                if (abiFilterList != null && abiFilterList.isNotEmpty()) {
+-                if (!abiFilterList.isNullOrEmpty()) {
 -                    include(*abiFilterList.toTypedArray())
 -                } else {
 -                    include(
@@ -26,4 +27,4 @@ diff --git a/V2rayNG/app/build.gradle.kts b/V2rayNG/app/build.gradle.kts
 -
          testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
      }
-
+ 
