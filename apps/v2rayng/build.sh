@@ -23,7 +23,10 @@ export NDK_HOME="${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:?no NDK available — se
 mkdir -p "$src/V2rayNG/app/libs"
 cp -r "$src/libs/." "$src/V2rayNG/app/libs/"
 
-xray_tag="$(git -C "$src/AndroidLibXrayLite" describe --tags --abbrev=0)"
+xray_sha="$(git -C "$src/AndroidLibXrayLite" rev-parse HEAD)"
+xray_tag="$(git -C "$src/AndroidLibXrayLite" ls-remote --tags origin \
+    | awk -v sha="$xray_sha" '$1 == sha { sub(/\^\{\}$/, "", $2); sub("refs/tags/", "", $2); print $2 }' \
+    | head -1)"
 curl -fsSL -o "$src/V2rayNG/app/libs/libv2ray.aar" \
     "https://github.com/2dust/AndroidLibXrayLite/releases/download/$xray_tag/libv2ray.aar"
 
