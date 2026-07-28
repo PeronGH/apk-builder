@@ -1,25 +1,29 @@
-diff --git a/V2rayNG/app/src/main/java/com/v2ray/ang/ui/MainActivity.kt b/V2rayNG/app/src/main/java/com/v2ray/ang/ui/MainActivity.kt
---- a/V2rayNG/app/src/main/java/com/v2ray/ang/ui/MainActivity.kt
-+++ b/V2rayNG/app/src/main/java/com/v2ray/ang/ui/MainActivity.kt
-@@ -631,7 +631,6 @@
-             R.id.routing_setting -> requestActivityLauncher.launch(Intent(this, RoutingSettingActivity::class.java))
-             R.id.user_asset_setting -> requestActivityLauncher.launch(Intent(this, UserAssetActivity::class.java))
-             R.id.settings -> requestActivityLauncher.launch(Intent(this, SettingsActivity::class.java))
--            R.id.promotion -> Utils.openUri(this, "${Utils.decode(AppConfig.APP_PROMOTION_URL)}?t=${System.currentTimeMillis()}")
-             R.id.logcat -> startActivity(Intent(this, LogcatActivity::class.java))
-             R.id.check_for_update -> startActivity(Intent(this, CheckUpdateActivity::class.java))
-             R.id.backup_restore -> requestActivityLauncher.launch(Intent(this, BackupActivity::class.java))
-diff --git a/V2rayNG/app/src/main/res/menu/menu_drawer.xml b/V2rayNG/app/src/main/res/menu/menu_drawer.xml
---- a/V2rayNG/app/src/main/res/menu/menu_drawer.xml
-+++ b/V2rayNG/app/src/main/res/menu/menu_drawer.xml
-@@ -27,10 +27,6 @@
-     </group>
-
-     <group android:id="@+id/group_id2">
--        <item
--            android:id="@+id/promotion"
--            android:icon="@drawable/ic_promotion_24dp"
--            android:title="@string/title_pref_promotion" />
-         <item
-             android:id="@+id/logcat"
-             android:icon="@drawable/ic_logcat_24dp"
+diff --git a/V2rayNG/app/src/main/java/com/v2ray/ang/ui/main/MainDrawer.kt b/V2rayNG/app/src/main/java/com/v2ray/ang/ui/main/MainDrawer.kt
+--- a/V2rayNG/app/src/main/java/com/v2ray/ang/ui/main/MainDrawer.kt
++++ b/V2rayNG/app/src/main/java/com/v2ray/ang/ui/main/MainDrawer.kt
+@@ -88,7 +88,6 @@
+             AppDivider()
+             DrawerMenuGroup(
+                 items = listOf(
+-                    DrawerMenuItemData(R.drawable.ic_promotion_24dp, R.string.title_pref_promotion, "promotion"),
+                     DrawerMenuItemData(R.drawable.ic_logcat_24dp, R.string.title_logcat, "logcat"),
+                     DrawerMenuItemData(R.drawable.ic_check_update_24dp, R.string.update_check_for_update, "check_update"),
+                     DrawerMenuItemData(R.drawable.ic_restore_24dp, R.string.title_configuration_backup_restore, "backup_restore"),
+diff --git a/V2rayNG/app/src/main/java/com/v2ray/ang/ui/main/MainActivity.kt b/V2rayNG/app/src/main/java/com/v2ray/ang/ui/main/MainActivity.kt
+--- a/V2rayNG/app/src/main/java/com/v2ray/ang/ui/main/MainActivity.kt
++++ b/V2rayNG/app/src/main/java/com/v2ray/ang/ui/main/MainActivity.kt
+@@ -147,14 +147,6 @@
+             "check_update" -> Intent(this, CheckUpdateActivity::class.java)
+             "backup_restore" -> Intent(this, BackupActivity::class.java)
+             "about" -> Intent(this, AboutActivity::class.java)
+-            "promotion" -> {
+-                Utils.openUri(
+-                    this,
+-                    "${Utils.decode(AppConfig.APP_PROMOTION_URL)}?t=${System.currentTimeMillis()}"
+-                )
+-                return
+-            }
+-
+             else -> return
+         }
+         settingsActivityLauncher.launch(intent)
