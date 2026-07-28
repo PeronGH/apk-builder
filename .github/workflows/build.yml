@@ -87,6 +87,8 @@ jobs:
 
       - name: Build
         id: build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           apks_file="$RUNNER_TEMP/apks.txt"

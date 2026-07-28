@@ -3,9 +3,9 @@
 # at build time, neither of which is committed:
 #   * libhev-socks5-tunnel .so per ABI, built here from the
 #     hev-socks5-tunnel submodule via the upstream compile-hevtun.sh.
-#   * libv2ray.aar, shipped as a binary release of 2dust/AndroidLibXrayLite
-#     — we download the release matching the pinned submodule tag rather
-#     than rebuild the Go core ourselves.
+#   * libv2ray.aar, the Xray Go core, taken from the newest apps/libv2ray
+#     release instead of 2dust's binary — we build our own so the core's
+#     transport-security policy can be patched.
 # compile-hevtun.sh calls $NDK_HOME/ndk-build; we reuse whichever NDK the
 # runner image already ships (exposed as ANDROID_NDK_HOME) so we don't
 # pay for another few-GB sdkmanager download on every build.
@@ -23,11 +23,10 @@ export NDK_HOME="${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:?no NDK available — se
 mkdir -p "$src/V2rayNG/app/libs"
 cp -r "$src/libs/." "$src/V2rayNG/app/libs/"
 
-xray_sha="$(git -C "$src/AndroidLibXrayLite" rev-parse HEAD)"
-xray_tag="$(git -C "$src/AndroidLibXrayLite" ls-remote --tags origin \
-    | awk -v sha="$xray_sha" '$1 == sha { sub(/\^\{\}$/, "", $2); sub("refs/tags/", "", $2); print $2 }' \
-    | head -1)"
-curl -fsSL -o "$src/V2rayNG/app/libs/libv2ray.aar" \
-    "https://github.com/2dust/AndroidLibXrayLite/releases/download/$xray_tag/libv2ray.aar"
+tag="$(gh release list --limit 100 --json tagName \
+    --jq 'map(.tagName | select(startswith("libv2ray-"))) | first')"
+: "${tag:?no libv2ray release to pull the core from}"
+gh release download "$tag" \
+    --pattern libv2ray.aar --dir "$src/V2rayNG/app/libs" --clobber >&2
 
 exec "$here/../../common/gradle-release.sh" "$src/V2rayNG" :app:assemblePlaystoreRelease
