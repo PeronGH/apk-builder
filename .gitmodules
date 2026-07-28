@@ -23,3 +23,13 @@
 	url = https://github.com/RemuruSama/OTA-Pulse.git
 	branch = main
 	shallow = true
+[submodule "libv2ray"]
+	path = apps/libv2ray/source
+	url = https://github.com/2dust/AndroidLibXrayLite
+	branch = main
+	shallow = true
+[submodule "xray-core"]
+	path = apps/libv2ray/xray-core
+	url = https://github.com/XTLS/Xray-core
+	branch = main
+	shallow = true

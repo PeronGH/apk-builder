@@ -1,13 +1,27 @@
 #!/usr/bin/env bash
 # Sign (or re-sign) APKs in-place with the CI keystore via uber-apk-signer.
+# Takes the app's whole artefact list and ignores anything that isn't an APK,
+# so apps that publish a library (apps/libv2ray) pass straight through.
 # Env:
 #   SIGNING_KEYSTORE_B64   base64-encoded JKS keystore, alias "release",
 #                          store + key password "apkbuilder".
 set -euo pipefail
 
 if [ $# -lt 1 ]; then
-    echo "usage: sign-apks.sh <apk> [<apk>...]" >&2
+    echo "usage: sign-apks.sh <artefact> [<artefact>...]" >&2
     exit 1
+fi
+
+apks=()
+for artefact in "$@"; do
+    case "$artefact" in
+        *.apk) apks+=("$artefact") ;;
+        *) echo "not an APK, leaving unsigned: $artefact" >&2 ;;
+    esac
+done
+
+if [ ${#apks[@]} -eq 0 ]; then
+    exit 0
 fi
 
 : "${SIGNING_KEYSTORE_B64:?SIGNING_KEYSTORE_B64 not set}"
@@ -29,7 +43,7 @@ if [ ! -f "$uas_jar" ]; then
 fi
 
 java -jar "$uas_jar" \
-    --apks "$@" \
+    --apks "${apks[@]}" \
     --ks "$ks" \
     --ksAlias release \
     --ksPass apkbuilder \

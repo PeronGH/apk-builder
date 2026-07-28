@@ -30,13 +30,13 @@ jobs:
           before="$(git rev-parse HEAD)"
           echo "before=$before" >>"$GITHUB_OUTPUT"
 
-          for sub in apps/*/source; do
-              name="$(basename "$(dirname "$sub")")"
-              git submodule update --remote "$sub"
-              if git diff --quiet -- "$sub"; then
+          for dir in apps/*/; do
+              name="$(basename "$dir")"
+              git submodule update --remote "$dir"
+              if git diff --quiet -- "$dir"; then
                   continue
               fi
-              git add "$sub"
+              git add "$dir"
               git commit -m "chore: bump $name"
           done
 

@@ -1,0 +1,32 @@
+diff --git a/infra/conf/xray.go b/infra/conf/xray.go
+index a0846a8..e8e561e 100644
+--- a/infra/conf/xray.go
++++ b/infra/conf/xray.go
+@@ -243,25 +243,8 @@ func requiresTransportSecurity(address *Address) bool {
+ }
+ 
+ func validateOutboundTransportSecurity(rawConfig interface{}, senderSettings *proxyman.SenderConfig) error {
+-	if senderSettings.StreamSettings != nil && senderSettings.StreamSettings.GetSecurityType() != "" {
+-		return nil
+-	}
+-
+-	if vlessCfg, ok := rawConfig.(*VLessOutboundConfig); ok {
+-		if vlessCfg.Encryption != "" && vlessCfg.Encryption != "none" {
+-			return nil
+-		}
+-		if requiresTransportSecurity(vlessCfg.Address) {
+-			return errors.New("vless without TLS or other encryption is prohibited unless the server address is a private IP or domain")
+-		}
+-	}
+-
+-	if tjCfg, ok := rawConfig.(*TrojanClientConfig); ok {
+-		if requiresTransportSecurity(tjCfg.Address) {
+-			return errors.New("trojan without TLS is prohibited unless the server address is a private IP or domain")
+-		}
+-	}
+-
++	// Transport security is the operator's call, not the core's: a VLESS or
++	// Trojan outbound with no TLS is a valid configuration we let through.
+ 	return nil
+ }
+ 
