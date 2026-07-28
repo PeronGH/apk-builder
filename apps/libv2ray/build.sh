@@ -8,7 +8,9 @@
 #
 # AndroidLibXrayLite pulls xray-core as a plain module dependency; the
 # xray-core submodule is our patchable checkout of it, swapped in by
-# patches/00-xray-core-local-replace.patch.
+# patches/00-xray-core-local-replace.patch. bump.sh keeps that submodule on
+# the commit go.mod requires, so go.sum already covers the module graph and
+# there is nothing here to resolve.
 #
 # gomobile wants an NDK; we reuse whichever one the runner image ships
 # rather than pay for an sdkmanager download.
@@ -26,7 +28,7 @@ cp "$src"/data/*.dat "$src/assets/"
 PATH="$(go env GOPATH)/bin:$PATH"
 go install golang.org/x/mobile/cmd/gomobile@latest >&2
 gomobile init >&2
-(cd "$src" && go mod tidy && gomobile bind -v -androidapi 24 -trimpath \
+(cd "$src" && gomobile bind -v -androidapi 24 -trimpath \
     -ldflags='-s -w -buildid= -checklinkname=0' ./) >&2
 
 echo "$src/libv2ray.aar"
