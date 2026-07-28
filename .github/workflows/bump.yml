@@ -32,7 +32,7 @@ jobs:
 
           for dir in apps/*/; do
               name="$(basename "$dir")"
-              git submodule update --remote "$dir"
+              builder/bump.sh "$dir"
               if git diff --quiet -- "$dir"; then
                   continue
               fi

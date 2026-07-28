@@ -9,6 +9,7 @@ Builds third-party Android APKs from upstream source, applies patches, re-signs 
 - `apps/<name>/patches/NN-*.patch` — numbered, applied from the submodule root with `patch -p1 --fuzz=3` before `build.sh` runs
 - `apps/<name>/patches/<submodule>/NN-*.patch` — same, for an app's *other* submodules; the directory name is the sibling of `source/` to patch
 - `apps/<name>/changed.sh` — optional change-detection override
+- `apps/<name>/bump.sh` — optional bump override; the default moves `source/` only, so an app with a second submodule declares one
 
 An "app" is really just a published artefact. `apps/libv2ray` builds a `.aar`, not an APK — the Sign step skips anything that isn't `*.apk`.
 - `common/*.sh` — shared build primitives (keystore, gradle-release, default-build, sign-apks)
@@ -62,6 +63,6 @@ Build-sign → release-resign is the expected flow for every app. Apps with upst
 - **Don't pre-install NDKs.** Gradle auto-installs when `android.ndkVersion` is declared in the project. If a pre-gradle step needs `NDK_HOME` (e.g. `compile-hevtun.sh` for v2rayng), reuse `$ANDROID_NDK_HOME` from the runner image — don't burn build time on `sdkmanager --install` unless CI proves the shipped NDK is incompatible. Telegram had a speculative NDK install; it was reverted once CI showed gradle handled it.
 - **Wait for CI evidence before defensive fixes** more generally — no workarounds ahead of a real failure.
 - **Release tag = `<app>-<short-sha>` of the submodule HEAD.** `build.yml` deletes and recreates the tag on each run, so fixup commits overwrite the same tag.
-- **`bump.yml` commits per-app** (`chore: bump <app>`) and passes the pre-bump SHA as `before` to `build.yml`, so only the bumped apps rebuild. It updates every submodule under `apps/<name>/`, not just `source/`.
+- **`bump.yml` commits per-app** (`chore: bump <app>`) and passes the pre-bump SHA as `before` to `build.yml`, so only the bumped apps rebuild. It bumps via `builder/bump.sh`, which defers to `apps/<name>/bump.sh` when present.
 - **v2rayng consumes libv2ray through a release, not the build.** `apps/v2rayng/libv2ray.tag` names the release to download. The app matrix runs in parallel, so bumping the core is deliberately two pushes: land the `apps/libv2ray` change and let it publish, then move the tag. Don't try to make one push do both — that's a 404 against a release still being built.
 - **Reusable workflows pin to the caller's SHA.** When `bump.yml` calls `build.yml` via `workflow_call`, `github.sha` inside build.yml is the caller's commit — i.e. the pre-bump state. That's why `bump.yml` also outputs `after` (post-push HEAD) and passes it as `sha`, and why `build.yml`'s checkouts use `ref: ${{ inputs.sha || github.sha }}`. Without this, detect compares HEAD against itself and finds no changes.
