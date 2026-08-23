@@ -16,7 +16,6 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
       FAILED_RUN_ID: ${{ github.event.client_payload.run_id }}
-      FAILED_RUN_URL: ${{ github.event.client_payload.run_url }}
       REPAIR_BRANCH: fix/ci-${{ github.event.client_payload.run_id }}
     steps:
       - uses: actions/checkout@v7
