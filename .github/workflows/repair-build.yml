@@ -56,4 +56,4 @@ jobs:
       - name: Repair
         run: |
           set -euo pipefail
-          pi --print --thinking high "@$RUNNER_TEMP/fix-failed-build.md"
+          pi --print --thinking max "@$RUNNER_TEMP/fix-failed-build.md"
