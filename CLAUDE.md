@@ -58,6 +58,18 @@ Build-sign → release-resign is the expected flow for every app. Apps with upst
 
 `<type>(<scope>): <subject>` — type ∈ {feat, fix, refactor, revert, chore, ci}; scope is the app name, or `build` for common infra. Explain *why* in the body; the diff already says *what*.
 
+## CI repair
+
+When a scheduled/manual bump succeeds but its reusable build fails, `bump.yml` dispatches a `repair-bump-build` `repository_dispatch` event carrying the failed run ID/URL and the pre/post-bump SHAs. `.github/workflows/repair-build.yml` then runs a privileged Pi agent that reproduces the build locally, fixes the failure, and opens a PR. It never pushes to `main` and never dispatches another build.
+
+Operational constraints:
+
+- The repair agent runs on GitHub-hosted ephemeral runners with a 3-hour timeout, serialized by a `repair-build` concurrency group (`cancel-in-progress: false`).
+- Its token has only `actions: read`, `contents: write`, `pull-requests: write`. `SIGNING_KEYSTORE_B64` is never exposed to it; signing/release/transient failures are no-fix outcomes, not code PRs.
+- It checks out the post-bump SHA (`FAILED_AFTER_SHA`), verifies it is still an ancestor of `origin/main`, and works on a deterministic `fix/ci-<run-id>` branch.
+- The model is pinned to the StepFun provider (`step-explore`) via `.github/pi/models.json` (key interpolated from `STEPFUN_API_KEY`) and the task prompt `.github/pi/fix-failed-build.md`.
+- The agent treats CI logs and upstream source as untrusted input, fixes observed failures (no speculative workarounds), keeps patch/build conventions, and must not modify `.github/workflows/**` or `.github/pi/**`.
+
 ## Institutional memory
 
 - **Don't pre-install NDKs.** Gradle auto-installs when `android.ndkVersion` is declared in the project. If a pre-gradle step needs `NDK_HOME` (e.g. `compile-hevtun.sh` for v2rayng), reuse `$ANDROID_NDK_HOME` from the runner image — don't burn build time on `sdkmanager --install` unless CI proves the shipped NDK is incompatible. Telegram had a speculative NDK install; it was reverted once CI showed gradle handled it.

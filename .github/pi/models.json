@@ -1,0 +1,28 @@
+{
+  "providers": {
+    "stepfun": {
+      "baseUrl": "https://api.stepfun.com/step_plan",
+      "api": "anthropic-messages",
+      "apiKey": "$STEPFUN_API_KEY",
+      "models": [
+        {
+          "id": "step-explore",
+          "name": "Step Explore",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 1000000,
+          "maxTokens": 100000,
+          "cost": {
+            "input": 0.2,
+            "output": 1.15,
+            "cacheRead": 0.04,
+            "cacheWrite": 0
+          },
+          "compat": {
+            "forceAdaptiveThinking": true
+          }
+        }
+      ]
+    }
+  }
+}

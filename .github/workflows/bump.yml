@@ -60,3 +60,27 @@ jobs:
       before: ${{ needs.bump.outputs.before }}
       sha: ${{ needs.bump.outputs.after }}
     secrets: inherit
+
+  repair:
+    needs: [bump, build]
+    if: ${{ always() && needs.bump.result == 'success' && needs.build.result == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch repair event
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FAILED_RUN_ID: ${{ github.run_id }}
+          FAILED_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FAILED_BEFORE_SHA: ${{ needs.bump.outputs.before }}
+          FAILED_AFTER_SHA: ${{ needs.bump.outputs.after }}
+        run: |
+          set -euo pipefail
+          jq -n \
+            --arg run_id "$FAILED_RUN_ID" \
+            --arg run_url "$FAILED_RUN_URL" \
+            --arg before "$FAILED_BEFORE_SHA" \
+            --arg after "$FAILED_AFTER_SHA" \
+            '{event_type: "repair-bump-build", client_payload: {run_id: $run_id, run_url: $run_url, before: $before, after: $after}}' \
+            > "$RUNNER_TEMP/repair-dispatch.json"
+          gh api --input "$RUNNER_TEMP/repair-dispatch.json" \
+            "repos/${{ github.repository }}/dispatches"
