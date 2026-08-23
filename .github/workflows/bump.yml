@@ -71,16 +71,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           FAILED_RUN_ID: ${{ github.run_id }}
           FAILED_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          FAILED_BEFORE_SHA: ${{ needs.bump.outputs.before }}
           FAILED_AFTER_SHA: ${{ needs.bump.outputs.after }}
         run: |
           set -euo pipefail
           jq -n \
             --arg run_id "$FAILED_RUN_ID" \
             --arg run_url "$FAILED_RUN_URL" \
-            --arg before "$FAILED_BEFORE_SHA" \
             --arg after "$FAILED_AFTER_SHA" \
-            '{event_type: "repair-bump-build", client_payload: {run_id: $run_id, run_url: $run_url, before: $before, after: $after}}' \
+            '{event_type: "repair-bump-build", client_payload: {run_id: $run_id, run_url: $run_url, after: $after}}' \
             > "$RUNNER_TEMP/repair-dispatch.json"
           gh api --input "$RUNNER_TEMP/repair-dispatch.json" \
             "repos/${{ github.repository }}/dispatches"
