@@ -79,8 +79,6 @@ jobs:
             --no-extensions \
             --no-skills \
             --no-prompt-templates \
-            --provider stepfun \
-            --model step-explore \
             --thinking high \
             @.github/pi/fix-failed-build.md
 
