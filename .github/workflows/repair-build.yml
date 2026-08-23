@@ -12,7 +12,6 @@ permissions:
 jobs:
   repair:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
