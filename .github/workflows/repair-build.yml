@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 180
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      STEPFUN_API_KEY: ${{ secrets.STEPFUN_API_KEY }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
       FAILED_RUN_ID: ${{ github.event.client_payload.run_id }}
       FAILED_RUN_URL: ${{ github.event.client_payload.run_url }}
       FAILED_BEFORE_SHA: ${{ github.event.client_payload.before }}

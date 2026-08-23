@@ -3,7 +3,7 @@
     "stepfun": {
       "baseUrl": "https://api.stepfun.com/step_plan",
       "api": "anthropic-messages",
-      "apiKey": "$STEPFUN_API_KEY",
+      "apiKey": "$LLM_API_KEY",
       "models": [
         {
           "id": "step-explore",

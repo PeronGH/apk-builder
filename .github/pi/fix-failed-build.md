@@ -8,7 +8,7 @@ You are repairing a CI build failure in this repository. The failure came from t
 - `FAILED_AFTER_SHA` — post-bump repository SHA (what CI built, and what is currently checked out)
 - `REPAIR_BRANCH` — the branch already created for you; you are on it
 - `GH_TOKEN` — GitHub token for `gh` commands
-- `STEPFUN_API_KEY` — your model credential; never print or transmit it
+- `LLM_API_KEY` — your model credential; never print or transmit it
 
 You have the `bash`, `read`, `write`, and `edit` tools in a non-interactive session. Work inside the already-checked-out repository. Do not start sessions or open an interactive TUI.
 
