@@ -55,4 +55,4 @@ jobs:
       - name: Repair
         run: |
           set -euo pipefail
-          pi --mode json --thinking max "@$RUNNER_TEMP/fix-failed-build.md"
+          pi -e npm:@peron_js/web-pi --mode json --thinking max "@$RUNNER_TEMP/fix-failed-build.md"
