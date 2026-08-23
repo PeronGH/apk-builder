@@ -21,7 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.client_payload.after }}
           submodules: recursive
 
       - name: Create repair branch
@@ -45,14 +44,11 @@ jobs:
       - name: Install Pi
         run: |
           set -euo pipefail
-          git fetch --depth 1 origin main
           mkdir -p "$HOME/.pi/agent"
-          git show FETCH_HEAD:.github/pi/models.json > "$HOME/.pi/agent/models.json"
-          chmod 600 "$HOME/.pi/agent/models.json"
-          git show FETCH_HEAD:.github/pi/fix-failed-build.md > "$RUNNER_TEMP/fix-failed-build.md"
+          install -m 600 .github/pi/models.json "$HOME/.pi/agent/models.json"
           npm install -g --ignore-scripts @earendil-works/pi-coding-agent@0.84.2
 
       - name: Repair
         run: |
           set -euo pipefail
-          pi -e npm:@peron_js/web-pi --mode json --thinking max "@$RUNNER_TEMP/fix-failed-build.md"
+          pi -e npm:@peron_js/web-pi --mode json --thinking max @.github/pi/fix-failed-build.md
