@@ -1,0 +1,13 @@
+diff --git a/settings.gradle b/settings.gradle
+index 2ac4c6de..86d6b9e6 100644
+--- a/settings.gradle
++++ b/settings.gradle
+@@ -1,6 +1,8 @@
+ include ':TMessagesProj'
+ include ':TMessagesProj_App'
++include ':jlatexmath'
+ include ':TMessagesProj_AppHuawei'
+ include ':TMessagesProj_AppHockeyApp'
+ include ':TMessagesProj_AppStandalone'
+ include ':TMessagesProj_AppTests'
++project(':jlatexmath').projectDir = new File(settingsDir, 'TMessagesProj/lib/jlatexmath/jlatexmath')
