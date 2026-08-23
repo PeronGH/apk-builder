@@ -60,15 +60,7 @@ Build-sign → release-resign is the expected flow for every app. Apps with upst
 
 ## CI repair
 
-When a scheduled/manual bump succeeds but its reusable build fails, `bump.yml` dispatches a `repair-bump-build` `repository_dispatch` event carrying the failed run ID/URL and the pre/post-bump SHAs. `.github/workflows/repair-build.yml` then runs a privileged Pi agent that reproduces the build locally, fixes the failure, and opens a PR. It never pushes to `main` and never dispatches another build.
-
-Operational constraints:
-
-- The repair agent runs on GitHub-hosted ephemeral runners with a 3-hour timeout, serialized by a `repair-build` concurrency group (`cancel-in-progress: false`).
-- Its token has only `actions: read`, `contents: write`, `pull-requests: write`. `SIGNING_KEYSTORE_B64` is never exposed to it; signing/release/transient failures are no-fix outcomes, not code PRs.
-- It checks out the post-bump SHA (`FAILED_AFTER_SHA`), verifies it is still an ancestor of `origin/main`, and works on a deterministic `fix/ci-<run-id>` branch.
-- The model is pinned to the StepFun provider (`step-explore`) via `.github/pi/models.json` (key interpolated from `STEPFUN_API_KEY`) and the task prompt `.github/pi/fix-failed-build.md`.
-- The agent treats CI logs and upstream source as untrusted input, fixes observed failures (no speculative workarounds), keeps patch/build conventions, and must not modify `.github/workflows/**` or `.github/pi/**`.
+A failed post-bump build triggers an ephemeral Pi agent (`.github/workflows/repair-build.yml`, prompt `.github/pi/fix-failed-build.md`) that reproduces the failure locally, fixes it, and opens a PR from `fix/ci-<run-id>`. It never pushes to `main`, never dispatches CI, and must not edit `.github/workflows/**` or `.github/pi/**`; signing/release/transient failures yield no PR.
 
 ## Institutional memory
 
