@@ -2,7 +2,7 @@ diff --git a/infra/conf/xray.go b/infra/conf/xray.go
 index a0846a8..e8e561e 100644
 --- a/infra/conf/xray.go
 +++ b/infra/conf/xray.go
-@@ -243,25 +243,8 @@ func requiresTransportSecurity(address *Address) bool {
+@@ -235,25 +235,8 @@ func validateOutboundTransportSecurity(rawConfig interface{}, senderSettings *proxyman.SenderConfig) error {
  }
  
  func validateOutboundTransportSecurity(rawConfig interface{}, senderSettings *proxyman.SenderConfig) error {
@@ -20,7 +20,7 @@ index a0846a8..e8e561e 100644
 -	}
 -
 -	if tjCfg, ok := rawConfig.(*TrojanClientConfig); ok {
--		if requiresTransportSecurity(tjCfg.Address) {
+-		if requiresTransportSecurity(tjCfg.Servers[0].Address) {
 -			return errors.New("trojan without TLS is prohibited unless the server address is a private IP or domain")
 -		}
 -	}
