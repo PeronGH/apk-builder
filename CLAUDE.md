@@ -58,10 +58,6 @@ Build-sign → release-resign is the expected flow for every app. Apps with upst
 
 `<type>(<scope>): <subject>` — type ∈ {feat, fix, refactor, revert, chore, ci}; scope is the app name, or `build` for common infra. Explain *why* in the body; the diff already says *what*.
 
-## CI repair
-
-A failed post-bump build triggers an ephemeral Pi agent (`.github/workflows/repair-build.yml`, prompt `.github/pi/fix-failed-build.md`) that reproduces the failure locally, fixes it, and opens a PR from `fix/ci-<run-id>`. It never pushes to `main`, never dispatches CI, and must not edit `.github/workflows/**` or `.github/pi/**`; signing/release/transient failures yield no PR.
-
 ## Institutional memory
 
 - **Don't pre-install NDKs.** Gradle auto-installs when `android.ndkVersion` is declared in the project. If a pre-gradle step needs `NDK_HOME` (e.g. `compile-hevtun.sh` for v2rayng), reuse `$ANDROID_NDK_HOME` from the runner image — don't burn build time on `sdkmanager --install` unless CI proves the shipped NDK is incompatible. Telegram had a speculative NDK install; it was reverted once CI showed gradle handled it.
