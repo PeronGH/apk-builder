@@ -1,8 +1,8 @@
 diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java b/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
-index 32cb1cf3d..46d7d79cc 100644
+index 7a0b35b13..b6cf6c2ac 100644
 --- a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
 +++ b/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
-@@ -20641,20 +20641,24 @@ public class MessagesController extends BaseController implements NotificationCe
+@@ -21603,20 +21603,24 @@ public class MessagesController extends BaseController implements NotificationCe
              } else {
                  req.top_msg_id = (int) topicId;
                  req.flags |= 1;
@@ -28,14 +28,14 @@ index 32cb1cf3d..46d7d79cc 100644
          info.loading = true;
          sponsoredMessages.put(dialogId, info);
 diff --git a/TMessagesProj/src/main/java/org/telegram/messenger/video/VideoAds.java b/TMessagesProj/src/main/java/org/telegram/messenger/video/VideoAds.java
-index 3a348c076..c1f95cab6 100644
+index a402447d4..3e891c0bc 100644
 --- a/TMessagesProj/src/main/java/org/telegram/messenger/video/VideoAds.java
 +++ b/TMessagesProj/src/main/java/org/telegram/messenger/video/VideoAds.java
-@@ -168,20 +168,22 @@ public class VideoAds {
-         if (!loaded) {
-             load();
-         } else {
+@@ -186,20 +186,22 @@ public static VideoAds make(
+             loaded = true;
              schedule();
+         } else {
+             load();
          }
      }
  
