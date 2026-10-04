@@ -30,6 +30,8 @@ Hand-edit `.gitmodules` afterward to add `shallow = true` — `git submodule add
 
 Executable, `set -euo pipefail`. Print artefact paths to **stdout**, everything else to **stderr** — `builder/build.sh` captures stdout as the artefact list.
 
+Build scripts are CI-only: never run them locally, and don't write them to be portable. Assume the `ubuntu-latest` runner (bash 5, passwordless `sudo`) and modify the system freely — e.g. `sudo apt-get install` unconditionally, no `command -v` guards.
+
 Don't resolve versions, assert submodule SHAs, or otherwise bump anything inside a `build.sh`. Submodules are the pins and `bump.yml` moves them; a build script builds what's checked out.
 
 Delegate to a shared primitive:
