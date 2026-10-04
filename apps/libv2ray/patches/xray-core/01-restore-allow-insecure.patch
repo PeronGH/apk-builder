@@ -1,0 +1,80 @@
+diff --git a/infra/conf/transport_security.go b/infra/conf/transport_security.go
+index b5cd7d2..d3f4ee6 100644
+--- a/infra/conf/transport_security.go
++++ b/infra/conf/transport_security.go
+@@ -358,9 +358,7 @@ func (c *TLSConfig) Build() (proto.Message, error) {
+ 	config.RejectUnknownSni = c.RejectUnknownSNI
+ 	config.MasterKeyLog = c.MasterKeyLog
+ 
+-	if c.AllowInsecure {
+-		return nil, errors.PrintRemovedFeatureError(`"allowInsecure"`, `"pinnedPeerCertSha256"(pcs) and "verifyPeerCertByName"(vcn)`)
+-	}
++	config.AllowInsecure = c.AllowInsecure
+ 	if c.PinnedPeerCertSha256 != "" {
+ 		for v := range strings.SplitSeq(c.PinnedPeerCertSha256, ",") {
+ 			v = strings.TrimSpace(v)
+diff --git a/transport/internet/tls/config.go b/transport/internet/tls/config.go
+index f33e829..cbdb4a4 100644
+--- a/transport/internet/tls/config.go
++++ b/transport/internet/tls/config.go
+@@ -384,6 +384,7 @@ func (c *Config) GetTLSConfig(opts ...Option) *tls.Config {
+ 		PinnedPeerCertSha256: c.PinnedPeerCertSha256,
+ 	}
+ 	config := &tls.Config{
++		InsecureSkipVerify:     c.AllowInsecure,
+ 		Rand:                   randCarrier,
+ 		ClientSessionCache:     globalSessionCache,
+ 		RootCAs:                root,
+diff --git a/transport/internet/tls/config.pb.go b/transport/internet/tls/config.pb.go
+index b622d5a..38dc1eb 100644
+--- a/transport/internet/tls/config.pb.go
++++ b/transport/internet/tls/config.pb.go
+@@ -177,7 +177,8 @@ func (x *Certificate) GetBuildChain() bool {
+ }
+ 
+ type Config struct {
+-	state protoimpl.MessageState `protogen:"open.v1"`
++	state         protoimpl.MessageState `protogen:"open.v1"`
++	AllowInsecure bool                   `protobuf:"varint,1,opt,name=allow_insecure,json=allowInsecure,proto3" json:"allow_insecure,omitempty"`
+ 	// List of certificates to be served on server.
+ 	Certificate []*Certificate `protobuf:"bytes,2,rep,name=certificate,proto3" json:"certificate,omitempty"`
+ 	// Override server name.
+@@ -240,6 +241,13 @@ func (*Config) Descriptor() ([]byte, []int) {
+ 	return file_transport_internet_tls_config_proto_rawDescGZIP(), []int{1}
+ }
+ 
++func (x *Config) GetAllowInsecure() bool {
++	if x != nil {
++		return x.AllowInsecure
++	}
++	return false
++}
++
+ func (x *Config) GetCertificate() []*Certificate {
+ 	if x != nil {
+ 		return x.Certificate
+@@ -377,8 +385,9 @@ const file_transport_internet_tls_config_proto_rawDesc = "" +
+ 	"\x05Usage\x12\x10\n" +
+ 	"\fENCIPHERMENT\x10\x00\x12\x14\n" +
+ 	"\x10AUTHORITY_VERIFY\x10\x01\x12\x13\n" +
+-	"\x0fAUTHORITY_ISSUE\x10\x02\"\xa6\x06\n" +
+-	"\x06Config\x12J\n" +
++	"\x0fAUTHORITY_ISSUE\x10\x02\"\xcd\x06\n" +
++	"\x06Config\x12%\n" +
++	"\x0eallow_insecure\x18\x01 \x01(\bR\rallowInsecure\x12J\n" +
+ 	"\vcertificate\x18\x02 \x03(\v2(.xray.transport.internet.tls.CertificateR\vcertificate\x12\x1f\n" +
+ 	"\vserver_name\x18\x03 \x01(\tR\n" +
+ 	"serverName\x12#\n" +
+diff --git a/transport/internet/tls/config.proto b/transport/internet/tls/config.proto
+index a05cc04..a3ed860 100644
+--- a/transport/internet/tls/config.proto
++++ b/transport/internet/tls/config.proto
+@@ -38,7 +38,7 @@ message Certificate {
+ }
+ 
+ message Config {
+-  // Number 1 was assigned and used by an legacy option.
++  bool allow_insecure = 1;
+ 
+   // List of certificates to be served on server.
+   repeated Certificate certificate = 2;
